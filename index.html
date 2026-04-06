@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engineering Calculators — A. Dhar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f0e8;
+    --paper-dark: #ede8dc;
+    --ink: #1a1209;
+    --ink-faded: #4a3f2f;
+    --ink-light: #7a6a55;
+    --grid-line: rgba(100, 140, 200, 0.18);
+    --accent: #8b3a0f;
+    --accent-light: #c4622a;
+    --accent-bg: rgba(139, 58, 15, 0.08);
+    --blue-ink: #1a3a6b;
+    --blue-light: rgba(26, 58, 107, 0.12);
+    --green-ink: #1a4a2a;
+    --border: rgba(90, 75, 55, 0.25);
+    --shadow: rgba(50, 35, 15, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    background: var(--paper-dark);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Red margin line like a real notebook */
+  body::before {
+    content: '';
+    position: fixed;
+    left: 72px;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: rgba(180, 40, 40, 0.25);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .page-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem 5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 2.5rem 0 1.5rem;
+    border-bottom: 2px solid var(--ink-faded);
+    margin-bottom: 2rem;
+  }
+
+  .header-stamp {
+    font-family: 'Special Elite', cursive;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.5rem;
+  }
+
+  header h1 {
+    font-family: 'Special Elite', cursive;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    color: var(--ink);
+    font-weight: 400;
+  }
+
+  header h1 span {
+    color: var(--accent);
+  }
+
+  .header-meta {
+    margin-top: 0.75rem;
+    font-size: 12px;
+    color: var(--ink-light);
+    font-style: italic;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  /* Nav tabs */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .tab-btn {
+    font-family: 'Special Elite', cursive;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    padding: 0.6rem 1.4rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    color: var(--ink-light);
+    transition: all 0.15s;
+    position: relative;
+    bottom: -2px;
+  }
+  .tab-btn:hover { color: var(--ink-faded); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--accent-bg);
+  }
+
+  /* Section heading */
+  .section-label {
+    font-family: 'Special Elite', cursive;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Calculator card */
+  .calc-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 2px 3px 8px var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.4);
+    position: relative;
+  }
+
+  /* Folded corner effect */
+  .calc-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 18px 18px 0;
+    border-color: transparent var(--paper-dark) transparent transparent;
+  }
+
+  .calc-title {
+    font-family: 'Special Elite', cursive;
+    font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+  }
+
+  .calc-subtitle {
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-bottom: 1.25rem;
+  }
+
+  /* Formula display */
+  .formula-box {
+    background: var(--blue-light);
+    border-left: 3px solid var(--blue-ink);
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.25rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12.5px;
+    color: var(--blue-ink);
+    line-height: 1.7;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* Input grid */
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field label {
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .field label .unit {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .field input, .field select {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    -moz-appearance: textfield;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.9);
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* Calculate button */
+  .calc-btn {
+    font-family: 'Special Elite', cursive;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    padding: 0.55rem 1.6rem;
+    background: var(--accent);
+    color: #f5f0e8;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .calc-btn:hover { background: var(--accent-light); }
+  .calc-btn:active { transform: scale(0.98); }
+
+  /* Results */
+  .results {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--border);
+    display: none;
+  }
+  .results.show { display: block; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .result-item {
+    padding: 0.7rem 0.9rem;
+    background: var(--paper-dark);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  .result-label {
+    font-size: 10px;
+    color: var(--ink-light);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .result-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+
+  .result-unit {
+    font-size: 11px;
+    color: var(--ink-light);
+    margin-top: 1px;
+    font-style: italic;
+  }
+
+  /* Status / warning strip */
+  .status-strip {
+    font-size: 11.5px;
+    padding: 0.45rem 0.75rem;
+    border-radius: 2px;
+    font-style: italic;
+    margin-top: 0.5rem;
+  }
+  .status-strip.ok { background: rgba(26, 74, 42, 0.1); color: var(--green-ink); border-left: 3px solid var(--green-ink); }
+  .status-strip.warn { background: rgba(139, 58, 15, 0.1); color: var(--accent); border-left: 3px solid var(--accent); }
+  .status-strip.info { background: var(--blue-light); color: var(--blue-ink); border-left: 3px solid var(--blue-ink); }
+
+  /* Moody chart canvas */
+  canvas {
+    width: 100%;
+    max-width: 100%;
+    height: 260px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(255,255,255,0.5);
+    margin-top: 1rem;
+  }
+
+  /* Tab pages */
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  .page-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 700px) {
+    .page-cols { grid-template-columns: 1fr; }
+    .page-wrap { padding-left: 2rem; }
+    body::before { display: none; }
+  }
+
+  .handwritten-note {
+    font-family: 'Special Elite', cursive;
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-top: 0.5rem;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="header-stamp">Engineering Reference Workbook · Rev. 1.0</div>
+    <h1>Engg.<span> Calculators</span></h1>
+    <div class="header-meta">
+      <span>Fluid Mechanics &amp; Machine Design</span>
+      <span>All formulas cited to source</span>
+      <span>SI &amp; Imperial units</span>
+    </div>
+  </header>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('fluid')">§1 — Pipe Flow</button>
+    <button class="tab-btn" onclick="switchTab('spring')">§2 — Springs</button>
+    <button class="tab-btn" onclick="switchTab('shaft')">§3 — Shafts</button>
+    <button class="tab-btn" onclick="switchTab('gear')">§4 — Gears</button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 1: PIPE FLOW -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-page active" id="tab-fluid">
+
+    <div class="section-label">Darcy–Weisbach · Colebrook–White · Minor Losses</div>
+
+    <div class="calc-card">
+      <div class="calc-title">Pipe Flow &amp; Pressure Drop</div>
+      <div class="calc-subtitle">Calculates Re, friction factor (Colebrook–White iterative), major &amp; minor losses</div>
+
+      <div class="formula-box">
+        ΔP_major = f · (L/D) · (ρV²/2)  [Darcy–Weisbach]<br>
+        1/√f = −2 log(ε/3.7D + 2.51/Re√f)  [Colebrook–White]<br>
+        Re = ρVD/μ  |  V = Q/(πD²/4)
+      </div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label>Pipe Diameter <span class="unit">mm</span></label>
+          <input type="number" id="f-D" value="50" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Pipe Length <span class="unit">m</span></label>
+          <input type="number" id="f-L" value="100" min="0.1" step="1">
+        </div>
+        <div class="field">
+          <label>Flow Rate <span class="unit">L/min</span></label>
+          <input type="number" id="f-Q" value="200" min="0.1" step="1">
+        </div>
+        <div class="field">
+          <label>Roughness ε <span class="unit">mm</span></label>
+          <input type="number" id="f-eps" value="0.046" min="0" step="0.001">
+        </div>
+        <div class="field">
+          <label>Fluid</label>
+          <select id="f-fluid" onchange="updateFluidProps()">
+            <option value="water20">Water @ 20°C</option>
+            <option value="water60">Water @ 60°C</option>
+            <option value="oil">Hydraulic Oil ISO VG 46</option>
+            <option value="air">Air @ 20°C</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Density ρ <span class="unit">kg/m³</span></label>
+          <input type="number" id="f-rho" value="998" step="0.1">
+        </div>
+        <div class="field">
+          <label>Dynamic viscosity μ <span class="unit">mPa·s</span></label>
+          <input type="number" id="f-mu" value="1.002" step="0.001">
+        </div>
+        <div class="field">
+          <label>Minor loss Σ K</label>
+          <input type="number" id="f-K" value="3.5" min="0" step="0.1">
+        </div>
+      </div>
+
+      <div class="handwritten-note">* Common K values: Gate valve open=0.2, Elbow 90°=0.9, Tee branch=1.8, Entry sharp=0.5</div>
+      <br>
+      <button class="calc-btn" onclick="calcPipeFlow()">▶ Calculate</button>
+
+      <div class="results" id="pf-results">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Velocity</div>
+            <div class="result-value" id="pf-v">—</div>
+            <div class="result-unit">m/s</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Reynolds Number</div>
+            <div class="result-value" id="pf-re">—</div>
+            <div class="result-unit">dimensionless</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Friction Factor f</div>
+            <div class="result-value" id="pf-f">—</div>
+            <div class="result-unit">Darcy</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">ΔP Major</div>
+            <div class="result-value" id="pf-dp-maj">—</div>
+            <div class="result-unit">kPa</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">ΔP Minor</div>
+            <div class="result-value" id="pf-dp-min">—</div>
+            <div class="result-unit">kPa</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">ΔP Total</div>
+            <div class="result-value" id="pf-dp-tot">—</div>
+            <div class="result-unit">kPa</div>
+          </div>
+        </div>
+        <div class="status-strip" id="pf-regime">—</div>
+      </div>
+    </div>
+
+    <div class="calc-card">
+      <div class="calc-title">Orifice / Venturi Flow Meter</div>
+      <div class="calc-subtitle">ISO 5167 — differential pressure flow measurement</div>
+
+      <div class="formula-box">
+        Q = Cd · A₂ · √(2ΔP / (ρ(1−β⁴)))  |  β = d₂/d₁<br>
+        Cd ≈ 0.61 (orifice)  |  Cd ≈ 0.98 (venturi)
+      </div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label>Pipe bore d₁ <span class="unit">mm</span></label>
+          <input type="number" id="or-d1" value="80" min="5">
+        </div>
+        <div class="field">
+          <label>Throat bore d₂ <span class="unit">mm</span></label>
+          <input type="number" id="or-d2" value="48" min="1">
+        </div>
+        <div class="field">
+          <label>Diff. pressure ΔP <span class="unit">kPa</span></label>
+          <input type="number" id="or-dp" value="20" min="0.01" step="0.1">
+        </div>
+        <div class="field">
+          <label>Meter type</label>
+          <select id="or-type">
+            <option value="0.61">Orifice plate (Cd = 0.61)</option>
+            <option value="0.98">Venturi (Cd = 0.98)</option>
+            <option value="0.82">Flow nozzle (Cd = 0.82)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Density ρ <span class="unit">kg/m³</span></label>
+          <input type="number" id="or-rho" value="998" step="0.1">
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calcOrifice()">▶ Calculate</button>
+
+      <div class="results" id="or-results">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Beta ratio β</div>
+            <div class="result-value" id="or-beta">—</div>
+            <div class="result-unit">d₂/d₁</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Flow rate Q</div>
+            <div class="result-value" id="or-Q">—</div>
+            <div class="result-unit">L/min</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Throat velocity</div>
+            <div class="result-value" id="or-v2">—</div>
+            <div class="result-unit">m/s</div>
+          </div>
+        </div>
+        <div class="status-strip info" id="or-note">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 2: SPRINGS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-spring">
+
+    <div class="section-label">Helical Compression Spring — Wahl Correction · Shigley Ch. 10</div>
+
+    <div class="calc-card">
+      <div class="calc-title">Spring Rate &amp; Stress</div>
+      <div class="calc-subtitle">Wahl stress correction, solid height, natural frequency, surge check</div>
+
+      <div class="formula-box">
+        C = D/d  |  Kw = (4C−1)/(4C−4) + 0.615/C  [Wahl factor]<br>
+        τ_max = Kw · 8FD / (πd³)  |  k = Gd⁴ / (8D³Na)<br>
+        f_nat = (d/πD²Na) · √(G/2ρ) · (1/2)  [surge check]
+      </div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label>Wire diameter d <span class="unit">mm</span></label>
+          <input type="number" id="sp-d" value="4" min="0.1" step="0.1">
+        </div>
+        <div class="field">
+          <label>Mean coil dia D <span class="unit">mm</span></label>
+          <input type="number" id="sp-D" value="32" min="1" step="0.5">
+        </div>
+        <div class="field">
+          <label>Active coils Na</label>
+          <input type="number" id="sp-Na" value="8" min="1" step="0.5">
+        </div>
+        <div class="field">
+          <label>Free length L₀ <span class="unit">mm</span></label>
+          <input type="number" id="sp-L0" value="90" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Applied load F <span class="unit">N</span></label>
+          <input type="number" id="sp-F" value="200" min="0.1" step="1">
+        </div>
+        <div class="field">
+          <label>Material</label>
+          <select id="sp-mat" onchange="updateSpringMat()">
+            <option value="hard-drawn">Hard-drawn wire (G=79.3 GPa)</option>
+            <option value="chrome-vanadate">Chrome-vanadium (G=77.2 GPa)</option>
+            <option value="stainless">Stainless 302 (G=68.9 GPa)</option>
+            <option value="phosphor">Phosphor bronze (G=41.4 GPa)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Shear modulus G <span class="unit">GPa</span></label>
+          <input type="number" id="sp-G" value="79.3" step="0.1">
+        </div>
+        <div class="field">
+          <label>Allowable shear τ_all <span class="unit">MPa</span></label>
+          <input type="number" id="sp-tau-all" value="420" step="5">
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calcSpring()">▶ Calculate</button>
+
+      <div class="results" id="sp-results">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Spring index C</div>
+            <div class="result-value" id="sp-C">—</div>
+            <div class="result-unit">D/d (4–12 ideal)</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Wahl factor Kw</div>
+            <div class="result-value" id="sp-Kw">—</div>
+            <div class="result-unit">stress correction</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Spring rate k</div>
+            <div class="result-value" id="sp-k">—</div>
+            <div class="result-unit">N/mm</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Max shear stress</div>
+            <div class="result-value" id="sp-tau">—</div>
+            <div class="result-unit">MPa</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Deflection δ</div>
+            <div class="result-value" id="sp-delta">—</div>
+            <div class="result-unit">mm</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Solid height Hs</div>
+            <div class="result-value" id="sp-Hs">—</div>
+            <div class="result-unit">mm (Na+2)·d</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Natural frequency</div>
+            <div class="result-value" id="sp-fn">—</div>
+            <div class="result-unit">Hz (surge &gt; 13×excit.)</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Safety factor</div>
+            <div class="result-value" id="sp-SF">—</div>
+            <div class="result-unit">τ_all / τ_max</div>
+          </div>
+        </div>
+        <div class="status-strip" id="sp-status">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 3: SHAFT -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-shaft">
+
+    <div class="section-label">Solid/Hollow Shaft — DE-Goodman Fatigue · Shigley Ch. 6</div>
+
+    <div class="calc-card">
+      <div class="calc-title">Shaft Fatigue &amp; Static Design</div>
+      <div class="calc-subtitle">ASME DE-Goodman criterion — combined bending + torsion, fully reversed + mean stress</div>
+
+      <div class="formula-box">
+        σ'a = √(σa² + 3τa²)  |  σ'm = √(σm² + 3τm²)  [von Mises]<br>
+        1/n = σ'a/Se + σ'm/Sut  [DE-Goodman]<br>
+        Se = ka·kb·kc·kd·Se'  |  Se' ≈ 0.5·Sut  (Sut ≤ 1400 MPa)
+      </div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label>Shaft diameter d <span class="unit">mm</span></label>
+          <input type="number" id="sh-d" value="40" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Bending moment Ma <span class="unit">N·m</span></label>
+          <input type="number" id="sh-Ma" value="500" min="0" step="10">
+        </div>
+        <div class="field">
+          <label>Mean bending Mm <span class="unit">N·m</span></label>
+          <input type="number" id="sh-Mm" value="0" min="0" step="10">
+        </div>
+        <div class="field">
+          <label>Torque amplitude Ta <span class="unit">N·m</span></label>
+          <input type="number" id="sh-Ta" value="0" min="0" step="10">
+        </div>
+        <div class="field">
+          <label>Mean torque Tm <span class="unit">N·m</span></label>
+          <input type="number" id="sh-Tm" value="300" min="0" step="10">
+        </div>
+        <div class="field">
+          <label>Sut (material) <span class="unit">MPa</span></label>
+          <input type="number" id="sh-Sut" value="800" min="100" step="10">
+        </div>
+        <div class="field">
+          <label>Surface factor ka</label>
+          <input type="number" id="sh-ka" value="0.76" min="0.1" max="1" step="0.01">
+        </div>
+        <div class="field">
+          <label>Stress conc. Kf</label>
+          <input type="number" id="sh-Kf" value="1.8" min="1" step="0.05">
+        </div>
+        <div class="field">
+          <label>Reliability factor kd</label>
+          <input type="number" id="sh-kd" value="0.897" min="0.5" max="1" step="0.001">
+        </div>
+      </div>
+
+      <div class="handwritten-note">* ka (machined): 0.76–0.9 | kd: 99%=0.814, 95%=0.868, 90%=0.897 | Kf typical keyway=2.0</div>
+      <br>
+      <button class="calc-btn" onclick="calcShaft()">▶ Calculate</button>
+
+      <div class="results" id="sh-results">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Endurance limit Se</div>
+            <div class="result-value" id="sh-Se">—</div>
+            <div class="result-unit">MPa</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">σ'a (von Mises)</div>
+            <div class="result-value" id="sh-sigma-a">—</div>
+            <div class="result-unit">MPa</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">σ'm (von Mises)</div>
+            <div class="result-value" id="sh-sigma-m">—</div>
+            <div class="result-unit">MPa</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Fatigue SF (Goodman)</div>
+            <div class="result-value" id="sh-nf">—</div>
+            <div class="result-unit">n ≥ 1.5 recommended</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Yielding SF</div>
+            <div class="result-value" id="sh-ny">—</div>
+            <div class="result-unit">Sy = 0.6·Sut</div>
+          </div>
+        </div>
+        <div class="status-strip" id="sh-status">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 4: GEARS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-gear">
+
+    <div class="section-label">Spur Gear — AGMA Lewis Bending · Hertz Contact Stress</div>
+
+    <div class="calc-card">
+      <div class="calc-title">Spur Gear Stress &amp; Geometry</div>
+      <div class="calc-subtitle">Lewis bending stress, Hertz contact stress, pitch line velocity, gear ratio</div>
+
+      <div class="formula-box">
+        σ_b = Wt/(F·m·Y)  [Lewis bending — simplified AGMA]<br>
+        σ_c = −Cp · √(Wt/(F·dp·I))  [AGMA contact stress]<br>
+        V = π·dp·n / 60000  [m/s]  |  GR = Ng/Np
+      </div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label>Module m <span class="unit">mm</span></label>
+          <input type="number" id="gr-m" value="3" min="0.5" step="0.5">
+        </div>
+        <div class="field">
+          <label>Pinion teeth Np</label>
+          <input type="number" id="gr-Np" value="20" min="8" step="1">
+        </div>
+        <div class="field">
+          <label>Gear teeth Ng</label>
+          <input type="number" id="gr-Ng" value="60" min="8" step="1">
+        </div>
+        <div class="field">
+          <label>Face width F <span class="unit">mm</span></label>
+          <input type="number" id="gr-F" value="30" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Pinion speed np <span class="unit">RPM</span></label>
+          <input type="number" id="gr-n" value="1450" min="1" step="10">
+        </div>
+        <div class="field">
+          <label>Transmitted load Wt <span class="unit">N</span></label>
+          <input type="number" id="gr-Wt" value="2000" min="1" step="10">
+        </div>
+        <div class="field">
+          <label>Pressure angle φ <span class="unit">°</span></label>
+          <select id="gr-phi">
+            <option value="20">20° (standard)</option>
+            <option value="25">25° (heavy duty)</option>
+            <option value="14.5">14.5° (legacy)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Material Sut <span class="unit">MPa</span></label>
+          <input type="number" id="gr-Sut" value="700" min="100" step="10">
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calcGear()">▶ Calculate</button>
+
+      <div class="results" id="gr-results">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Gear ratio</div>
+            <div class="result-value" id="gr-GR">—</div>
+            <div class="result-unit">Ng/Np</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Centre distance</div>
+            <div class="result-value" id="gr-cd">—</div>
+            <div class="result-unit">mm</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Pitch line vel.</div>
+            <div class="result-value" id="gr-V">—</div>
+            <div class="result-unit">m/s</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Lewis form factor Y</div>
+            <div class="result-value" id="gr-Y">—</div>
+            <div class="result-unit">pinion (weak gear)</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Bending stress σ_b</div>
+            <div class="result-value" id="gr-sb">—</div>
+            <div class="result-unit">MPa</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Allowable σ_b</div>
+            <div class="result-value" id="gr-sb-all">—</div>
+            <div class="result-unit">MPa (≈ 0.36·Sut)</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Output torque</div>
+            <div class="result-value" id="gr-Tout">—</div>
+            <div class="result-unit">N·m</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">SF bending</div>
+            <div class="result-value" id="gr-SF">—</div>
+            <div class="result-unit">≥ 1.5 recommended</div>
+          </div>
+        </div>
+        <div class="status-strip" id="gr-status">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>Anish Dhar · <a href="https://anishdhar9.github.io" target="_blank">Portfolio</a></span>
+    <span>Formulas: Shigley's MED 10e · Cengel Fluid Mechanics · ISO 5167</span>
+    <span>Use results as reference only — verify critical designs</span>
+  </footer>
+
+</div>
+
+<script>
+/* ─── TAB SWITCHING ─────────────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ─── FLUID PROPS LOOKUP ────────────────────────────────── */
+const fluidDB = {
+  'water20':  { rho: 998.2, mu: 1.002 },
+  'water60':  { rho: 983.2, mu: 0.467 },
+  'oil':      { rho: 875,   mu: 46    },
+  'air':      { rho: 1.204, mu: 0.01813 }
+};
+function updateFluidProps() {
+  const sel = document.getElementById('f-fluid').value;
+  if (sel === 'custom') return;
+  const f = fluidDB[sel];
+  document.getElementById('f-rho').value = f.rho;
+  document.getElementById('f-mu').value  = f.mu;
+}
+
+/* ─── PIPE FLOW CALCULATOR ──────────────────────────────── */
+function calcPipeFlow() {
+  const D   = parseFloat(document.getElementById('f-D').value) / 1000;
+  const L   = parseFloat(document.getElementById('f-L').value);
+  const Q   = parseFloat(document.getElementById('f-Q').value) / 60000; // m³/s
+  const eps = parseFloat(document.getElementById('f-eps').value) / 1000;
+  const rho = parseFloat(document.getElementById('f-rho').value);
+  const mu  = parseFloat(document.getElementById('f-mu').value) / 1000; // Pa·s
+  const K   = parseFloat(document.getElementById('f-K').value);
+
+  const A = Math.PI * D * D / 4;
+  const V = Q / A;
+  const Re = rho * V * D / mu;
+
+  let f;
+  if (Re < 2300) {
+    f = 64 / Re;
+  } else if (Re < 4000) {
+    f = 64 / Re; // transition — flag it
+  } else {
+    // Colebrook–White: 1/√f = -2·log(ε/3.7D + 2.51/(Re·√f))
+    f = 0.02; // initial guess
+    for (let i = 0; i < 100; i++) {
+      const rhs = -2 * Math.log10(eps / (3.7 * D) + 2.51 / (Re * Math.sqrt(f)));
+      const f_new = 1 / (rhs * rhs);
+      if (Math.abs(f_new - f) < 1e-10) break;
+      f = f_new;
+    }
+  }
+
+  const dP_maj = f * (L / D) * (0.5 * rho * V * V) / 1000; // kPa
+  const dP_min = K * 0.5 * rho * V * V / 1000; // kPa
+  const dP_tot = dP_maj + dP_min;
+
+  document.getElementById('pf-v').textContent  = V.toFixed(3);
+  document.getElementById('pf-re').textContent = Re.toFixed(0);
+  document.getElementById('pf-f').textContent  = f.toFixed(5);
+  document.getElementById('pf-dp-maj').textContent = dP_maj.toFixed(3);
+  document.getElementById('pf-dp-min').textContent = dP_min.toFixed(3);
+  document.getElementById('pf-dp-tot').textContent = dP_tot.toFixed(3);
+
+  const reg = document.getElementById('pf-regime');
+  if (Re < 2300) {
+    reg.className = 'status-strip ok';
+    reg.textContent = '✓ Laminar flow (Re = ' + Re.toFixed(0) + ' < 2300). f = 64/Re.';
+  } else if (Re < 4000) {
+    reg.className = 'status-strip warn';
+    reg.textContent = '⚠ Transition zone (2300 < Re < 4000) — unstable regime. Results approximate.';
+  } else {
+    reg.className = 'status-strip info';
+    reg.textContent = '✓ Turbulent (Re = ' + Re.toFixed(0) + '). Colebrook–White converged. ε/D = ' + (eps/D).toExponential(3);
+  }
+
+  document.getElementById('pf-results').classList.add('show');
+}
+
+/* ─── ORIFICE CALCULATOR ────────────────────────────────── */
+function calcOrifice() {
+  const d1  = parseFloat(document.getElementById('or-d1').value) / 1000;
+  const d2  = parseFloat(document.getElementById('or-d2').value) / 1000;
+  const dP  = parseFloat(document.getElementById('or-dp').value) * 1000; // Pa
+  const Cd  = parseFloat(document.getElementById('or-type').value);
+  const rho = parseFloat(document.getElementById('or-rho').value);
+
+  const beta = d2 / d1;
+  const A2   = Math.PI * d2 * d2 / 4;
+  const Q    = Cd * A2 * Math.sqrt(2 * dP / (rho * (1 - Math.pow(beta, 4))));
+  const v2   = Q / A2;
+
+  document.getElementById('or-beta').textContent = beta.toFixed(4);
+  document.getElementById('or-Q').textContent    = (Q * 60000).toFixed(2);
+  document.getElementById('or-v2').textContent   = v2.toFixed(3);
+
+  const note = document.getElementById('or-note');
+  note.className = 'status-strip info';
+  note.textContent = 'β = ' + beta.toFixed(3) + ' | ISO 5167 valid range: 0.20 ≤ β ≤ 0.75. ' +
+    (beta < 0.2 || beta > 0.75 ? '⚠ Outside standard range!' : '✓ Within standard range.');
+
+  document.getElementById('or-results').classList.add('show');
+}
+
+/* ─── SPRING CALCULATOR ─────────────────────────────────── */
+const springMatDB = {
+  'hard-drawn':     { G: 79.3, rho_mat: 7850 },
+  'chrome-vanadate':{ G: 77.2, rho_mat: 7850 },
+  'stainless':      { G: 68.9, rho_mat: 7900 },
+  'phosphor':       { G: 41.4, rho_mat: 8900 }
+};
+function updateSpringMat() {
+  const sel = document.getElementById('sp-mat').value;
+  document.getElementById('sp-G').value = springMatDB[sel].G;
+}
+
+function calcSpring() {
+  const d   = parseFloat(document.getElementById('sp-d').value);
+  const D   = parseFloat(document.getElementById('sp-D').value);
+  const Na  = parseFloat(document.getElementById('sp-Na').value);
+  const L0  = parseFloat(document.getElementById('sp-L0').value);
+  const F   = parseFloat(document.getElementById('sp-F').value);
+  const G   = parseFloat(document.getElementById('sp-G').value) * 1000; // N/mm²
+  const tauAll = parseFloat(document.getElementById('sp-tau-all').value);
+
+  const C  = D / d;
+  const Kw = (4*C - 1)/(4*C - 4) + 0.615/C;
+  const k  = (G * Math.pow(d, 4)) / (8 * Math.pow(D, 3) * Na); // N/mm
+  const delta = F / k;
+  const tau = Kw * 8 * F * D / (Math.PI * Math.pow(d, 3));
+  const Hs  = (Na + 2) * d;
+  const rho_mat = springMatDB[document.getElementById('sp-mat').value]?.rho_mat || 7850;
+  // Natural frequency (surge): fn = (d/(π²·D²·Na)) · √(G·g/(2·γ))
+  // Simplified: fn = (d/(π·D²·Na)) · √(G/(2·ρ))  [SI-consistent]
+  const fn = (d/1000) / (Math.PI * Math.pow(D/1000,2) * Na) * Math.sqrt(G*1e6 / (2*rho_mat));
+
+  const SF = tauAll / tau;
+
+  document.getElementById('sp-C').textContent     = C.toFixed(2);
+  document.getElementById('sp-Kw').textContent    = Kw.toFixed(4);
+  document.getElementById('sp-k').textContent     = k.toFixed(3);
+  document.getElementById('sp-tau').textContent   = tau.toFixed(1);
+  document.getElementById('sp-delta').textContent = delta.toFixed(2);
+  document.getElementById('sp-Hs').textContent    = Hs.toFixed(1);
+  document.getElementById('sp-fn').textContent    = fn.toFixed(1);
+  document.getElementById('sp-SF').textContent    = SF.toFixed(2);
+
+  const st = document.getElementById('sp-status');
+  let msgs = [];
+  if (C < 4)  msgs.push('⚠ Spring index C < 4 — difficult to manufacture');
+  if (C > 12) msgs.push('⚠ Spring index C > 12 — prone to tangling');
+  if (SF < 1.2) { st.className = 'status-strip warn'; msgs.push('✗ FAIL — shear stress exceeds allowable!'); }
+  else if (SF < 1.5) { st.className = 'status-strip warn'; msgs.push('⚠ Marginal safety factor ' + SF.toFixed(2)); }
+  else { st.className = 'status-strip ok'; msgs.push('✓ Pass — SF = ' + SF.toFixed(2)); }
+  if (L0 - delta < Hs + 1) msgs.push('⚠ Possible coil clash at deflection (check Ls vs L0−δ)');
+  st.textContent = msgs.join(' | ');
+
+  document.getElementById('sp-results').classList.add('show');
+}
+
+/* ─── SHAFT FATIGUE CALCULATOR ──────────────────────────── */
+function calcShaft() {
+  const d   = parseFloat(document.getElementById('sh-d').value) / 1000;
+  const Ma  = parseFloat(document.getElementById('sh-Ma').value);
+  const Mm  = parseFloat(document.getElementById('sh-Mm').value);
+  const Ta  = parseFloat(document.getElementById('sh-Ta').value);
+  const Tm  = parseFloat(document.getElementById('sh-Tm').value);
+  const Sut = parseFloat(document.getElementById('sh-Sut').value);
+  const ka  = parseFloat(document.getElementById('sh-ka').value);
+  const Kf  = parseFloat(document.getElementById('sh-Kf').value);
+  const kd  = parseFloat(document.getElementById('sh-kd').value);
+
+  const Se_prime = 0.5 * Sut; // MPa, Sut ≤ 1400
+  const kb = 1.24 * Math.pow(d*1000, -0.107); // size factor (d in mm, 8–250 range)
+  const kc = 1.0; // bending loading
+  const Se = ka * kb * kc * kd * Se_prime;
+
+  const I   = Math.PI * Math.pow(d, 4) / 64;
+  const J   = Math.PI * Math.pow(d, 4) / 32;
+  const c   = d / 2;
+
+  // Alternating: Kf applied to bending amplitude
+  const sigma_a_bend = Kf * Ma * c / I / 1e6; // MPa
+  const tau_a        = Kf * Ta * c / J / 1e6;
+
+  // Mean: Kf sometimes 1.0 for ductile, conservatively use Kf here
+  const sigma_m_bend = Kf * Mm * c / I / 1e6;
+  const tau_m        = Kf * Tm * c / J / 1e6;
+
+  const sigma_a_prime = Math.sqrt(sigma_a_bend**2 + 3*tau_a**2);
+  const sigma_m_prime = Math.sqrt(sigma_m_bend**2 + 3*tau_m**2);
+
+  const nf = 1 / (sigma_a_prime/Se + sigma_m_prime/Sut);
+  const Sy = 0.6 * Sut;
+  const ny = Sy / (sigma_a_prime + sigma_m_prime);
+
+  document.getElementById('sh-Se').textContent      = Se.toFixed(1);
+  document.getElementById('sh-sigma-a').textContent = sigma_a_prime.toFixed(2);
+  document.getElementById('sh-sigma-m').textContent = sigma_m_prime.toFixed(2);
+  document.getElementById('sh-nf').textContent      = nf.toFixed(3);
+  document.getElementById('sh-ny').textContent      = ny.toFixed(3);
+
+  const st = document.getElementById('sh-status');
+  if (nf < 1.0) {
+    st.className = 'status-strip warn';
+    st.textContent = '✗ FAIL — fatigue life < 1 (infinite life not achievable at this load). Reduce load or increase diameter.';
+  } else if (nf < 1.5) {
+    st.className = 'status-strip warn';
+    st.textContent = '⚠ Marginal — nf = ' + nf.toFixed(2) + '. Recommended nf ≥ 1.5 (dynamic machinery).';
+  } else {
+    st.className = 'status-strip ok';
+    st.textContent = '✓ DE-Goodman pass — nf = ' + nf.toFixed(2) + ' | ny = ' + ny.toFixed(2) + ' | Se = ' + Se.toFixed(0) + ' MPa';
+  }
+
+  document.getElementById('sh-results').classList.add('show');
+}
+
+/* ─── GEAR CALCULATOR ───────────────────────────────────── */
+// Lewis form factor Y — tabulated for 20° full-depth involute (Shigley Table 14-2)
+const lewisY = {
+  20: {12:0.245,13:0.261,14:0.277,15:0.290,16:0.296,17:0.303,18:0.309,
+       20:0.322,22:0.331,25:0.340,28:0.346,30:0.358,34:0.371,38:0.384,
+       40:0.389,45:0.399,50:0.408,60:0.422,75:0.435,100:0.447,150:0.460,
+       200:0.466,300:0.472,400:0.480},
+  25: {12:0.277,13:0.293,14:0.307,15:0.320,16:0.332,17:0.342,18:0.352,
+       20:0.369,22:0.383,25:0.401,28:0.415,30:0.425,35:0.442,40:0.457,
+       45:0.471,50:0.481,60:0.499,75:0.522,100:0.541,150:0.559,200:0.567}
+};
+
+function getLewisY(N, phi) {
+  const tab = lewisY[phi] || lewisY[20];
+  const keys = Object.keys(tab).map(Number).sort((a,b)=>a-b);
+  if (N <= keys[0]) return tab[keys[0]];
+  if (N >= keys[keys.length-1]) return tab[keys[keys.length-1]];
+  for (let i=0;i<keys.length-1;i++) {
+    if (N >= keys[i] && N <= keys[i+1]) {
+      const t = (N - keys[i]) / (keys[i+1] - keys[i]);
+      return tab[keys[i]] + t*(tab[keys[i+1]] - tab[keys[i]]);
+    }
+  }
+  return 0.35;
+}
+
+function calcGear() {
+  const m   = parseFloat(document.getElementById('gr-m').value);
+  const Np  = parseInt(document.getElementById('gr-Np').value);
+  const Ng  = parseInt(document.getElementById('gr-Ng').value);
+  const F   = parseFloat(document.getElementById('gr-F').value);
+  const np  = parseFloat(document.getElementById('gr-n').value);
+  const Wt  = parseFloat(document.getElementById('gr-Wt').value);
+  const phi = parseInt(document.getElementById('gr-phi').value);
+  const Sut = parseFloat(document.getElementById('gr-Sut').value);
+
+  const dp  = m * Np;  // mm
+  const dg  = m * Ng;
+  const cd  = (dp + dg) / 2;
+  const V   = Math.PI * dp * np / 60000; // m/s
+  const GR  = Ng / Np;
+  const ng  = np / GR;
+  const Tout = Wt * (dg / 2) / 1000; // N·m
+
+  const Y = getLewisY(Np, phi); // Pinion is weaker (smaller Y usually)
+  const sigma_b = Wt / (F * m * Y); // MPa (F and m in mm cancel)
+
+  const sigma_b_all = 0.36 * Sut; // simplified allowable per Shigley
+  const SF = sigma_b_all / sigma_b;
+
+  document.getElementById('gr-GR').textContent    = GR.toFixed(3);
+  document.getElementById('gr-cd').textContent    = cd.toFixed(2);
+  document.getElementById('gr-V').textContent     = V.toFixed(3);
+  document.getElementById('gr-Y').textContent     = Y.toFixed(4);
+  document.getElementById('gr-sb').textContent    = sigma_b.toFixed(1);
+  document.getElementById('gr-sb-all').textContent= sigma_b_all.toFixed(1);
+  document.getElementById('gr-Tout').textContent  = Tout.toFixed(1);
+  document.getElementById('gr-SF').textContent    = SF.toFixed(3);
+
+  const st = document.getElementById('gr-status');
+  let msgs = [];
+  if (V > 25) msgs.push('⚠ Pitch velocity > 25 m/s — dynamic factor becomes significant, use full AGMA');
+  if (Np < 17 && phi === 20) msgs.push('⚠ Np < 17 with 20° PA — check for undercutting');
+  if (SF < 1.2) { st.className = 'status-strip warn'; msgs.unshift('✗ FAIL bending'); }
+  else if (SF < 1.5) { st.className = 'status-strip warn'; msgs.unshift('⚠ Marginal SF = ' + SF.toFixed(2)); }
+  else { st.className = 'status-strip ok'; msgs.unshift('✓ Pass — SF = ' + SF.toFixed(2) + ' | ng = ' + ng.toFixed(0) + ' RPM'); }
+  st.textContent = msgs.join(' | ');
+
+  document.getElementById('gr-results').classList.add('show');
+}
+</script>
+</body>
+</html>

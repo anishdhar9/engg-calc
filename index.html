@@ -385,6 +385,7 @@
     <button class="tab-btn" onclick="switchTab('spring')">§2 — Springs</button>
     <button class="tab-btn" onclick="switchTab('shaft')">§3 — Shafts</button>
     <button class="tab-btn" onclick="switchTab('gear')">§4 — Gears</button>
+    <button class="tab-btn" onclick="switchTab('buckling')">§5 — Buckling</button>
   </nav>
 
   <!-- ═══════════════════════════════════════════════════════ -->
@@ -857,6 +858,118 @@
 
   </div>
 
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 5: BUCKLING -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-buckling">
+
+    <div class="section-label">Column Buckling — Euler Critical Load · Johnson Parabolic</div>
+
+    <div class="calc-card">
+      <div class="calc-title">Column Buckling Calculator</div>
+      <div class="calc-subtitle">Checks long and intermediate columns using Euler and Johnson criteria</div>
+
+      <div class="formula-box">
+        P<sub>cr,Euler</sub> = π²EI / (KL)²  |  λ = KL/r  |  r = √(I/A)<br>
+        C<sub>c</sub> = √(2π²E/Sy)  [transition slenderness]<br>
+        σ<sub>cr,Johnson</sub> = Sy · [1 − (Sy/(4π²E))·λ²]  (for λ &lt; C<sub>c</sub>)
+      </div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label>Actual length L <span class="unit">m</span></label>
+          <input type="number" id="bk-L" value="2.5" min="0.01" step="0.01">
+        </div>
+        <div class="field">
+          <label>End condition factor K</label>
+          <select id="bk-K">
+            <option value="1.0">Pinned-Pinned (K = 1.0)</option>
+            <option value="0.5">Fixed-Fixed (K = 0.5)</option>
+            <option value="0.7">Fixed-Pinned (K = 0.7)</option>
+            <option value="2.0">Fixed-Free / Cantilever (K = 2.0)</option>
+            <option value="custom">Custom K</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Custom K (if selected)</label>
+          <input type="number" id="bk-K-custom" value="1.0" min="0.1" step="0.01">
+        </div>
+        <div class="field">
+          <label>Young's modulus E <span class="unit">GPa</span></label>
+          <input type="number" id="bk-E" value="200" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Yield strength Sy <span class="unit">MPa</span></label>
+          <input type="number" id="bk-Sy" value="250" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Area A <span class="unit">mm²</span></label>
+          <input type="number" id="bk-A" value="1200" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>2nd moment I <span class="unit">mm⁴</span></label>
+          <input type="number" id="bk-I" value="220000" min="1" step="1000">
+        </div>
+        <div class="field">
+          <label>Applied axial load P <span class="unit">kN</span></label>
+          <input type="number" id="bk-P" value="55" min="0.01" step="0.1">
+        </div>
+      </div>
+
+      <div class="handwritten-note">* Tip: Use least-axis I for conservative column design and include realistic end restraint.</div>
+      <br>
+      <button class="calc-btn" onclick="calcBuckling()">▶ Calculate</button>
+
+      <div class="results" id="bk-results">
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Effective length KL</div>
+            <div class="result-value" id="bk-KL">—</div>
+            <div class="result-unit">m</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Radius of gyration r</div>
+            <div class="result-value" id="bk-r">—</div>
+            <div class="result-unit">mm</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Slenderness λ</div>
+            <div class="result-value" id="bk-lambda">—</div>
+            <div class="result-unit">KL/r</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Transition Cc</div>
+            <div class="result-value" id="bk-Cc">—</div>
+            <div class="result-unit">Johnson↔Euler split</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Euler load Pcr</div>
+            <div class="result-value" id="bk-Pe">—</div>
+            <div class="result-unit">kN</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Johnson load Pcr</div>
+            <div class="result-value" id="bk-Pj">—</div>
+            <div class="result-unit">kN</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Governing Pcr</div>
+            <div class="result-value" id="bk-Pgov">—</div>
+            <div class="result-unit">kN</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Buckling safety factor</div>
+            <div class="result-value" id="bk-SF">—</div>
+            <div class="result-unit">Pcr / P</div>
+          </div>
+        </div>
+        <div class="status-strip" id="bk-status">—</div>
+      </div>
+    </div>
+
+  </div>
+
   <footer>
     <span>Anish Dhar · <a href="https://anishdhar9.github.io" target="_blank">Portfolio</a></span>
     <span>Formulas: Shigley's MED 10e · Cengel Fluid Mechanics · ISO 5167</span>
@@ -1153,6 +1266,57 @@ function calcGear() {
 
   document.getElementById('gr-results').classList.add('show');
 }
+
+/* ─── COLUMN BUCKLING CALCULATOR ───────────────────────── */
+function calcBuckling() {
+  const L  = parseFloat(document.getElementById('bk-L').value);
+  const Ksel = document.getElementById('bk-K').value;
+  const K  = Ksel === 'custom' ? parseFloat(document.getElementById('bk-K-custom').value) : parseFloat(Ksel);
+  const E  = parseFloat(document.getElementById('bk-E').value) * 1000; // MPa (N/mm²)
+  const Sy = parseFloat(document.getElementById('bk-Sy').value);
+  const A  = parseFloat(document.getElementById('bk-A').value);
+  const I  = parseFloat(document.getElementById('bk-I').value);
+  const P  = parseFloat(document.getElementById('bk-P').value);
+
+  const KL_m = K * L;
+  const KL_mm = KL_m * 1000;
+  const r = Math.sqrt(I / A);
+  const lambda = KL_mm / r;
+  const Cc = Math.sqrt((2 * Math.PI * Math.PI * E) / Sy);
+
+  const Pe = (Math.PI * Math.PI * E * I) / (KL_mm * KL_mm) / 1000; // kN
+  const sigmaJ = Sy * (1 - (Sy * lambda * lambda) / (4 * Math.PI * Math.PI * E));
+  const Pj = Math.max(0, sigmaJ) * A / 1000; // kN
+
+  const useEuler = lambda >= Cc;
+  const Pgov = useEuler ? Pe : Math.min(Pe, Pj);
+  const SF = Pgov / P;
+
+  document.getElementById('bk-KL').textContent = KL_m.toFixed(3);
+  document.getElementById('bk-r').textContent = r.toFixed(3);
+  document.getElementById('bk-lambda').textContent = lambda.toFixed(2);
+  document.getElementById('bk-Cc').textContent = Cc.toFixed(2);
+  document.getElementById('bk-Pe').textContent = Pe.toFixed(2);
+  document.getElementById('bk-Pj').textContent = Pj.toFixed(2);
+  document.getElementById('bk-Pgov').textContent = Pgov.toFixed(2);
+  document.getElementById('bk-SF').textContent = SF.toFixed(2);
+
+  const st = document.getElementById('bk-status');
+  let regime = useEuler ? 'Euler (long column)' : 'Johnson (intermediate column)';
+  if (SF < 1.0) {
+    st.className = 'status-strip warn';
+    st.textContent = '✗ FAIL — Buckling risk. SF = ' + SF.toFixed(2) + ' | Regime: ' + regime + '. Increase I, reduce KL, or reduce load.';
+  } else if (SF < 1.5) {
+    st.className = 'status-strip warn';
+    st.textContent = '⚠ Marginal buckling margin. SF = ' + SF.toFixed(2) + ' | Regime: ' + regime + '. Consider SF ≥ 1.5 for design reserve.';
+  } else {
+    st.className = 'status-strip ok';
+    st.textContent = '✓ Pass — Buckling SF = ' + SF.toFixed(2) + ' | Regime: ' + regime + '.';
+  }
+
+  document.getElementById('bk-results').classList.add('show');
+}
+
 </script>
 </body>
 </html>

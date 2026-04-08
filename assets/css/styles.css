@@ -1,0 +1,358 @@
+  :root {
+    --paper: #f5f0e8;
+    --paper-dark: #ede8dc;
+    --ink: #1a1209;
+    --ink-faded: #4a3f2f;
+    --ink-light: #7a6a55;
+    --grid-line: rgba(100, 140, 200, 0.18);
+    --accent: #8b3a0f;
+    --accent-light: #c4622a;
+    --accent-bg: rgba(139, 58, 15, 0.08);
+    --blue-ink: #1a3a6b;
+    --blue-light: rgba(26, 58, 107, 0.12);
+    --green-ink: #1a4a2a;
+    --border: rgba(90, 75, 55, 0.25);
+    --shadow: rgba(50, 35, 15, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    background: var(--paper-dark);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Red margin line like a real notebook */
+  body::before {
+    content: '';
+    position: fixed;
+    left: 72px;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: rgba(180, 40, 40, 0.25);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .page-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem 5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 2.5rem 0 1.5rem;
+    border-bottom: 2px solid var(--ink-faded);
+    margin-bottom: 2rem;
+  }
+
+  .header-stamp {
+    font-family: 'Special Elite', cursive;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.5rem;
+  }
+
+  header h1 {
+    font-family: 'Special Elite', cursive;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    color: var(--ink);
+    font-weight: 400;
+  }
+
+  header h1 span {
+    color: var(--accent);
+  }
+
+  .header-meta {
+    margin-top: 0.75rem;
+    font-size: 12px;
+    color: var(--ink-light);
+    font-style: italic;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  /* Nav tabs */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .tab-btn {
+    font-family: 'Special Elite', cursive;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    padding: 0.6rem 1.4rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    color: var(--ink-light);
+    transition: all 0.15s;
+    position: relative;
+    bottom: -2px;
+  }
+  .tab-btn:hover { color: var(--ink-faded); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--accent-bg);
+  }
+
+  /* Section heading */
+  .section-label {
+    font-family: 'Special Elite', cursive;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Calculator card */
+  .calc-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 2px 3px 8px var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.4);
+    position: relative;
+  }
+
+  /* Folded corner effect */
+  .calc-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 18px 18px 0;
+    border-color: transparent var(--paper-dark) transparent transparent;
+  }
+
+  .calc-title {
+    font-family: 'Special Elite', cursive;
+    font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+  }
+
+  .calc-subtitle {
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-bottom: 1.25rem;
+  }
+
+  /* Formula display */
+  .formula-box {
+    background: var(--blue-light);
+    border-left: 3px solid var(--blue-ink);
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.25rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12.5px;
+    color: var(--blue-ink);
+    line-height: 1.7;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* Input grid */
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field label {
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .field label .unit {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .field input, .field select {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    -moz-appearance: textfield;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.9);
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* Calculate button */
+  .calc-btn {
+    font-family: 'Special Elite', cursive;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    padding: 0.55rem 1.6rem;
+    background: var(--accent);
+    color: #f5f0e8;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .calc-btn:hover { background: var(--accent-light); }
+  .calc-btn:active { transform: scale(0.98); }
+
+  /* Results */
+  .results {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--border);
+    display: none;
+  }
+  .results.show { display: block; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .result-item {
+    padding: 0.7rem 0.9rem;
+    background: var(--paper-dark);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  .result-label {
+    font-size: 10px;
+    color: var(--ink-light);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .result-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+
+  .result-unit {
+    font-size: 11px;
+    color: var(--ink-light);
+    margin-top: 1px;
+    font-style: italic;
+  }
+
+  /* Status / warning strip */
+  .status-strip {
+    font-size: 11.5px;
+    padding: 0.45rem 0.75rem;
+    border-radius: 2px;
+    font-style: italic;
+    margin-top: 0.5rem;
+  }
+  .status-strip.ok { background: rgba(26, 74, 42, 0.1); color: var(--green-ink); border-left: 3px solid var(--green-ink); }
+  .status-strip.warn { background: rgba(139, 58, 15, 0.1); color: var(--accent); border-left: 3px solid var(--accent); }
+  .status-strip.info { background: var(--blue-light); color: var(--blue-ink); border-left: 3px solid var(--blue-ink); }
+
+  /* Moody chart canvas */
+  canvas {
+    width: 100%;
+    max-width: 100%;
+    height: 260px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(255,255,255,0.5);
+    margin-top: 1rem;
+  }
+
+  /* Tab pages */
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  .page-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 700px) {
+    .page-cols { grid-template-columns: 1fr; }
+    .page-wrap { padding-left: 2rem; }
+    body::before { display: none; }
+  }
+
+  .handwritten-note {
+    font-family: 'Special Elite', cursive;
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-top: 0.5rem;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--ink-light);
+    font-style: italic;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }

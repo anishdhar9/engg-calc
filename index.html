@@ -619,29 +619,41 @@
   <!-- ═══════════════════════════════════════════════════════ -->
   <div class="tab-page" id="tab-beam">
 
-    <div class="section-label">Graphical Shear Force Diagram (SFD) · Bending Moment Diagram (BMD)</div>
+    <div class="section-label">Shear Force Diagram (SFD) · Bending Moment Diagram (BMD)</div>
 
     <div class="calc-card">
-      <div class="calc-title">Beam Load Builder + SFD/BMD Plots</div>
-      <div class="calc-subtitle">Add point loads, UDLs, and moments at any location. Get graphical input + output diagrams.</div>
+      <div class="calc-title">Beam SFD/BMD Calculator</div>
+      <div class="calc-subtitle">Supports multiple beam cases + basic/advanced section definition</div>
 
       <div class="formula-box">
-        Equilibrium: ΣFy = 0, ΣM = 0 for reactions.<br>
+        Beam equations solved for reactions, Vmax, Mmax, δmax.<br>
         Bending stress: σ_max = M_max·c / I<br>
-        Deflection solved from EI·y'' = M(x) (numerical integration).
+        Input loads in kN / kN·m units and section properties in mm dimensions.
       </div>
 
       <div class="input-grid">
         <div class="field">
-          <label>Support condition</label>
-          <select id="bm-support">
-            <option value="simply">Simply supported</option>
-            <option value="cantilever">Cantilever (fixed at left)</option>
+          <label>Beam type</label>
+          <select id="bm-type" onchange="updateBeamLoadInputs()">
+            <option value="simply_point_center">Simply supported + center point load</option>
+            <option value="simply_point_offset">Simply supported + eccentric point load</option>
+            <option value="simply_udl_full">Simply supported + full-span UDL</option>
+            <option value="cantilever_end_point">Cantilever + end point load</option>
+            <option value="cantilever_udl_full">Cantilever + full-span UDL</option>
+            <option value="fixed_udl_full">Fixed-fixed + full-span UDL</option>
           </select>
         </div>
         <div class="field">
           <label>Span L <span class="unit">m</span></label>
-          <input type="number" id="bm-L" value="6" min="0.1" step="0.1">
+          <input type="number" id="bm-L" value="4" min="0.1" step="0.1">
+        </div>
+        <div class="field">
+          <label>Load magnitude <span class="unit" id="bm-load-unit">kN</span></label>
+          <input type="number" id="bm-load" value="10" step="0.1">
+        </div>
+        <div class="field" id="bm-a-wrap" style="display:none">
+          <label>Point load position a from left <span class="unit">m</span></label>
+          <input type="number" id="bm-a" value="1.5" min="0" step="0.1">
         </div>
         <div class="field">
           <label>Elastic modulus E <span class="unit">GPa</span></label>
@@ -651,29 +663,12 @@
           <label>Input detail level</label>
           <select id="bm-sec-mode" onchange="updateBeamSectionMode()">
             <option value="basic">Basic (I and c directly)</option>
-            <option value="advanced">Advanced (full dimensions)</option>
+            <option value="advanced">Advanced (cross-section dimensions)</option>
           </select>
         </div>
       </div>
 
-      <div class="calc-title" style="margin-top:0.4rem">Load Inputs (location + type)</div>
-      <div style="overflow:auto; margin:0.6rem 0 1rem;">
-        <table style="width:100%; border-collapse:collapse; font-size:12px;">
-          <thead>
-            <tr style="text-align:left; border-bottom:1px solid var(--border);">
-              <th style="padding:6px;">Load type</th>
-              <th style="padding:6px;">Magnitude</th>
-              <th style="padding:6px;">x start (m)</th>
-              <th style="padding:6px;">x end (m)</th>
-              <th style="padding:6px;">Action</th>
-            </tr>
-          </thead>
-          <tbody id="bm-load-body"></tbody>
-        </table>
-      </div>
-      <button class="calc-btn" type="button" onclick="addLoadRow()">＋ Add load row</button>
-
-      <div class="input-grid" id="bm-basic-sec" style="margin-top:1rem;">
+      <div class="input-grid" id="bm-basic-sec">
         <div class="field">
           <label>Second moment I <span class="unit">mm⁴</span></label>
           <input type="number" id="bm-I-basic" value="8.5e6" min="1" step="1000">
@@ -684,7 +679,7 @@
         </div>
       </div>
 
-      <div class="input-grid" id="bm-adv-sec" style="display:none; margin-top:1rem;">
+      <div class="input-grid" id="bm-adv-sec" style="display:none">
         <div class="field">
           <label>Cross section</label>
           <select id="bm-shape" onchange="updateBeamSectionDims()">
@@ -717,21 +712,17 @@
         </div>
       </div>
 
-      <button class="calc-btn" onclick="calcBeam()" style="margin-top:1rem;">▶ Calculate + Plot</button>
+      <button class="calc-btn" onclick="calcBeam()">▶ Calculate</button>
 
       <div class="results" id="bm-results">
         <div class="result-grid">
           <div class="result-item"><div class="result-label">Left reaction RA</div><div class="result-value" id="bm-RA">—</div><div class="result-unit">kN</div></div>
           <div class="result-item"><div class="result-label">Right reaction RB</div><div class="result-value" id="bm-RB">—</div><div class="result-unit">kN</div></div>
-          <div class="result-item"><div class="result-label">Fixed reaction MA</div><div class="result-value" id="bm-MA">—</div><div class="result-unit">kN·m</div></div>
           <div class="result-item"><div class="result-label">Max |V|</div><div class="result-value" id="bm-Vmax">—</div><div class="result-unit">kN</div></div>
           <div class="result-item"><div class="result-label">Max |M|</div><div class="result-value" id="bm-Mmax">—</div><div class="result-unit">kN·m</div></div>
           <div class="result-item"><div class="result-label">Max deflection δmax</div><div class="result-value" id="bm-ymax">—</div><div class="result-unit">mm</div></div>
           <div class="result-item"><div class="result-label">Max bending stress σmax</div><div class="result-value" id="bm-sigma-max">—</div><div class="result-unit">MPa</div></div>
         </div>
-        <canvas id="bm-canvas-load" width="880" height="220"></canvas>
-        <canvas id="bm-canvas-sfd" width="880" height="220"></canvas>
-        <canvas id="bm-canvas-bmd" width="880" height="220"></canvas>
         <div class="status-strip" id="bm-status">—</div>
       </div>
     </div>

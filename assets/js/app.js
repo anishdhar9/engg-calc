@@ -4,7 +4,7 @@ import { updateSpringMat, calcSpring } from './spring.js';
 import { calcShaft } from './shaft.js';
 import { calcGear } from './gear.js';
 import { calcBuckling } from './buckling.js';
-import { addLoadRow, removeLoadRow, updateBeamSectionMode, updateBeamSectionDims, calcBeam, initBeam } from './beam.js';
+import { updateBeamLoadInputs, updateBeamSectionMode, updateBeamSectionDims, calcBeam } from './beam.js';
 
 Object.assign(window, {
   switchTab,
@@ -16,11 +16,12 @@ Object.assign(window, {
   calcShaft,
   calcGear,
   calcBuckling,
-  addLoadRow,
-  removeLoadRow,
+  updateBeamLoadInputs,
   updateBeamSectionMode,
   updateBeamSectionDims,
   calcBeam
 });
 
-initBeam();
+updateBeamLoadInputs();
+updateBeamSectionMode();
+updateBeamSectionDims();

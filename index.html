@@ -28,6 +28,7 @@
     <button class="tab-btn" onclick="switchTab('shaft', this)">§3 — Shafts</button>
     <button class="tab-btn" onclick="switchTab('gear', this)">§4 — Gears</button>
     <button class="tab-btn" onclick="switchTab('buckling', this)">§5 — Buckling</button>
+    <button class="tab-btn" onclick="switchTab('beam', this)">§6 — Beams (SFD/BMD)</button>
   </nav>
 
   <!-- ═══════════════════════════════════════════════════════ -->
@@ -610,6 +611,130 @@
       </div>
     </div>
 
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 6: BEAMS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-page" id="tab-beam">
+
+    <div class="section-label">Graphical Shear Force Diagram (SFD) · Bending Moment Diagram (BMD)</div>
+
+    <div class="calc-card">
+      <div class="calc-title">Beam Load Builder + SFD/BMD Plots</div>
+      <div class="calc-subtitle">Add point loads, UDLs, and moments at any location. Get graphical input + output diagrams.</div>
+
+      <div class="formula-box">
+        Equilibrium: ΣFy = 0, ΣM = 0 for reactions.<br>
+        Bending stress: σ_max = M_max·c / I<br>
+        Deflection solved from EI·y'' = M(x) (numerical integration).
+      </div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label>Support condition</label>
+          <select id="bm-support">
+            <option value="simply">Simply supported</option>
+            <option value="cantilever">Cantilever (fixed at left)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Span L <span class="unit">m</span></label>
+          <input type="number" id="bm-L" value="6" min="0.1" step="0.1">
+        </div>
+        <div class="field">
+          <label>Elastic modulus E <span class="unit">GPa</span></label>
+          <input type="number" id="bm-E" value="200" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Input detail level</label>
+          <select id="bm-sec-mode" onchange="updateBeamSectionMode()">
+            <option value="basic">Basic (I and c directly)</option>
+            <option value="advanced">Advanced (full dimensions)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="calc-title" style="margin-top:0.4rem">Load Inputs (location + type)</div>
+      <div style="overflow:auto; margin:0.6rem 0 1rem;">
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr style="text-align:left; border-bottom:1px solid var(--border);">
+              <th style="padding:6px;">Load type</th>
+              <th style="padding:6px;">Magnitude</th>
+              <th style="padding:6px;">x start (m)</th>
+              <th style="padding:6px;">x end (m)</th>
+              <th style="padding:6px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="bm-load-body"></tbody>
+        </table>
+      </div>
+      <button class="calc-btn" type="button" onclick="addLoadRow()">＋ Add load row</button>
+
+      <div class="input-grid" id="bm-basic-sec" style="margin-top:1rem;">
+        <div class="field">
+          <label>Second moment I <span class="unit">mm⁴</span></label>
+          <input type="number" id="bm-I-basic" value="8.5e6" min="1" step="1000">
+        </div>
+        <div class="field">
+          <label>Extreme fiber distance c <span class="unit">mm</span></label>
+          <input type="number" id="bm-c-basic" value="60" min="0.1" step="0.1">
+        </div>
+      </div>
+
+      <div class="input-grid" id="bm-adv-sec" style="display:none; margin-top:1rem;">
+        <div class="field">
+          <label>Cross section</label>
+          <select id="bm-shape" onchange="updateBeamSectionDims()">
+            <option value="rect">Rectangle</option>
+            <option value="circle">Solid circular</option>
+            <option value="hollow_circle">Hollow circular</option>
+            <option value="i_section">I-section</option>
+          </select>
+        </div>
+
+        <div class="bm-shape-group" data-shape="rect" style="display:contents">
+          <div class="field"><label>Width b <span class="unit">mm</span></label><input type="number" id="bm-r-b" value="80"></div>
+          <div class="field"><label>Depth h <span class="unit">mm</span></label><input type="number" id="bm-r-h" value="150"></div>
+        </div>
+
+        <div class="bm-shape-group" data-shape="circle" style="display:none">
+          <div class="field"><label>Diameter d <span class="unit">mm</span></label><input type="number" id="bm-c-d" value="120"></div>
+        </div>
+
+        <div class="bm-shape-group" data-shape="hollow_circle" style="display:none">
+          <div class="field"><label>Outer diameter D <span class="unit">mm</span></label><input type="number" id="bm-hc-D" value="150"></div>
+          <div class="field"><label>Wall thickness t <span class="unit">mm</span></label><input type="number" id="bm-hc-t" value="8"></div>
+        </div>
+
+        <div class="bm-shape-group" data-shape="i_section" style="display:none">
+          <div class="field"><label>Total depth h <span class="unit">mm</span></label><input type="number" id="bm-i-h" value="300"></div>
+          <div class="field"><label>Flange width bf <span class="unit">mm</span></label><input type="number" id="bm-i-bf" value="150"></div>
+          <div class="field"><label>Web thickness tw <span class="unit">mm</span></label><input type="number" id="bm-i-tw" value="8"></div>
+          <div class="field"><label>Flange thickness tf <span class="unit">mm</span></label><input type="number" id="bm-i-tf" value="12"></div>
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calcBeam()" style="margin-top:1rem;">▶ Calculate + Plot</button>
+
+      <div class="results" id="bm-results">
+        <div class="result-grid">
+          <div class="result-item"><div class="result-label">Left reaction RA</div><div class="result-value" id="bm-RA">—</div><div class="result-unit">kN</div></div>
+          <div class="result-item"><div class="result-label">Right reaction RB</div><div class="result-value" id="bm-RB">—</div><div class="result-unit">kN</div></div>
+          <div class="result-item"><div class="result-label">Fixed reaction MA</div><div class="result-value" id="bm-MA">—</div><div class="result-unit">kN·m</div></div>
+          <div class="result-item"><div class="result-label">Max |V|</div><div class="result-value" id="bm-Vmax">—</div><div class="result-unit">kN</div></div>
+          <div class="result-item"><div class="result-label">Max |M|</div><div class="result-value" id="bm-Mmax">—</div><div class="result-unit">kN·m</div></div>
+          <div class="result-item"><div class="result-label">Max deflection δmax</div><div class="result-value" id="bm-ymax">—</div><div class="result-unit">mm</div></div>
+          <div class="result-item"><div class="result-label">Max bending stress σmax</div><div class="result-value" id="bm-sigma-max">—</div><div class="result-unit">MPa</div></div>
+        </div>
+        <canvas id="bm-canvas-load" width="880" height="220"></canvas>
+        <canvas id="bm-canvas-sfd" width="880" height="220"></canvas>
+        <canvas id="bm-canvas-bmd" width="880" height="220"></canvas>
+        <div class="status-strip" id="bm-status">—</div>
+      </div>
+    </div>
   </div>
 
   <footer>
